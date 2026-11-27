@@ -1,0 +1,23 @@
+/* View Sweep (see src/lib/view-sweep.ts). Every value here is written each frame by the script,
+   from one clock. Only the View Transition snapshots move, never the live page, so text doesn't
+   re-rasterize and shimmer afterwards. The animation only keeps the transition open; the script
+   ends it once the wave has gone. */
+canvas.view-sweep { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 100; }
+html.vs-run canvas.view-sweep { view-transition-name: view-sweep; }
+html.vs-run::view-transition-group(root), html.vs-run::view-transition-group(view-sweep) { animation: none; }
+html.vs-run::view-transition-old(view-sweep) { display: none; }
+html.vs-run::view-transition-new(view-sweep) { animation: none; }
+html.vs-run::view-transition-old(root), html.vs-run::view-transition-new(root) {
+  transform-origin: var(--vs-x) var(--vs-y);
+  scale: var(--vs-scale, 1);
+  filter: blur(var(--vs-blur, 0px));
+  animation: vs-open 60s linear both;
+}
+/* Ahead of the wave the old page is nudged down as it arrives; behind it the new one flows up */
+html.vs-run::view-transition-old(root) { translate: 0 calc(var(--vs-p, 0) * 10px); }
+html.vs-run::view-transition-new(root) {
+  translate: 0 calc((1 - var(--vs-p, 0)) * (1 - var(--vs-p, 0)) * 26px);
+  -webkit-mask-image: radial-gradient(ellipse 70vw var(--vs-eb) at 50% calc(var(--vs-front) - var(--vs-eb)), #000 80%, transparent 100%), linear-gradient(to bottom, #000 calc(var(--vs-front) - var(--vs-eb)), transparent calc(var(--vs-front) - var(--vs-eb)));
+  mask-image: radial-gradient(ellipse 70vw var(--vs-eb) at 50% calc(var(--vs-front) - var(--vs-eb)), #000 80%, transparent 100%), linear-gradient(to bottom, #000 calc(var(--vs-front) - var(--vs-eb)), transparent calc(var(--vs-front) - var(--vs-eb)));
+}
+@keyframes vs-open { from, to { opacity: 1; } }
