@@ -57,13 +57,21 @@ export function createViewSweep(o: ViewSweepOptions) {
     root.style.setProperty('--vs-blur', `${back.toFixed(2)}px`);
   };
 
+  // Get the wave ready while the page is idle, so the first press doesn't pay for compiling
+  // the shader: create it and run one invisible sweep.
+  const make = () => {
+    if (ctrl || matchMedia('(prefers-reduced-motion: reduce)').matches || !document.startViewTransition) return;
+    ctrl = createShader({ canvas: o.canvas, palette, direction: 'ttb', bandTight: 12, curve, swellAmount: 0.2, rippleAmount: 1.6, waveAmount: 2, waveSpeed: 1.6 });
+    if (ctrl) playSweep(ctrl, { palette, direction: 'ttb', sweepMs: 60, outroMs: 0, peakAlpha: 0 }).done.then(() => ctrl?.setProgress(0));
+  };
+  const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 3000 }) : setTimeout(fn, 1500));
+  idle(make);
+
   /** Swap the page with `apply` (which changes the DOM), sweeping from `from` if given. */
   const run = async (apply: () => void, from?: Element | null) => {
     if (busy) return;
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!still && document.startViewTransition) {
-      ctrl ??= createShader({ canvas: o.canvas, palette, direction: 'ttb', bandTight: 12, curve, swellAmount: 0.2, rippleAmount: 1.6, waveAmount: 2, waveSpeed: 1.6 });
-    }
+    if (!still) make();
     if (!ctrl || still || !document.startViewTransition) { apply(); o.fallback?.(); return; }
     busy = true;
     const r = from?.getBoundingClientRect();

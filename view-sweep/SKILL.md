@@ -54,6 +54,7 @@ Why the numbers are what they are: `references/timing.md`.
 - **Never animate the live page.** Only the View Transition snapshots move. Animating the real DOM makes text shimmer when it settles.
 - **One clock.** Don't add CSS animations or timeouts around it. Everything reads the wave's progress each frame; that's what stops the end from jumping.
 - **Navigation comes back last.** If the page has a table of contents, a pager or a toolbar, hide it in `change` and bring it back after `run()` resolves. It can't point at sections that aren't there yet.
+- **Preload the hidden version's first images.** They're lazy while hidden, so the first switch would download and decode them halfway through the wave and stutter. On idle, set `loading = 'eager'` and call `decode()` on the first few. The script already compiles the wave on idle.
 - **Content hidden at load must not be in a scroll-reveal state.** If the site reveals blocks on scroll, skip blocks that are hidden (no layout) when the page loads; otherwise they're blank inside the transition.
 - **Make the change visible above the fold.** If the first changed block starts below the fold on a laptop, tighten the space above it, or the sweep shows the same screen twice.
 - **Respect reduced motion.** `run()` already swaps instantly; `fallback` is where a quiet alternative goes (a short fade or rise).
